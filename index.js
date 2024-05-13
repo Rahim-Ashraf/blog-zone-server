@@ -9,6 +9,8 @@ app.use(
     cors({
         origin: [
             "http://localhost:5173",
+            "https://blog-zone-8a6a4.web.app",
+            "https://blog-zone-8a6a4.firebaseapp.com"
         ],
         credentials: true,
     })
@@ -45,10 +47,9 @@ async function run() {
             res.send(result)
         })
         app.get("/blog-details/:id", async (req, res) => {
-            const id = req.params.id
-            console.log("id")
+            const id = req.params.id;
             const query = { _id: new ObjectId(id) };
-            const result = await blogs.findOne(query)
+            const result = await blogs.findOne(query);
             res.send(result)
         })
         app.post("/add-blog", async (req, res) => {
@@ -59,6 +60,12 @@ async function run() {
         app.post("/add-wishlist", async (req, res) => {
             const data = req.body;
             const result = await wishlist.insertOne(data);
+            res.send(result)
+        })
+        app.get("/wishlist", async (req, res) => {
+            const email= req.query.email;
+            const query = { wishlist_email: email };
+            const result = await wishlist.find(query).toArray();
             res.send(result)
         })
 
