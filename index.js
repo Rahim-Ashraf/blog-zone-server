@@ -34,6 +34,7 @@ async function run() {
 
         const database = client.db("blog_zone");
         const blogs = database.collection("blogs");
+        const wishlist = database.collection("wishlist");
 
         app.get("/recent-blogs", async (req, res) => {
             const result = await blogs.find().limit(6).toArray();
@@ -45,8 +46,19 @@ async function run() {
         })
         app.get("/blog-details/:id", async (req, res) => {
             const id = req.params.id
+            console.log("id")
             const query = { _id: new ObjectId(id) };
             const result = await blogs.findOne(query)
+            res.send(result)
+        })
+        app.post("/add-blog", async (req, res) => {
+            const data = req.body;
+            const result = await blogs.insertOne(data);
+            res.send(result)
+        })
+        app.post("/add-wishlist", async (req, res) => {
+            const data = req.body;
+            const result = await wishlist.insertOne(data);
             res.send(result)
         })
 
