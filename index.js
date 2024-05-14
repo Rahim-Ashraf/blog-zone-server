@@ -47,10 +47,23 @@ async function run() {
             const result = await blogs.find().toArray();
             res.send(result)
         })
-        app.get("/blog-details/:id", async (req, res) => {
+        app.get("/blog/:id", async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await blogs.findOne(query);
+            res.send(result)
+        })
+        app.patch("/update", async (req, res) => {
+            const id = req.query.id;
+            const newData = req.body;
+            const { title, image_url, short_description, long_description, category } = newData
+            const filter = { _id: new ObjectId(id) };
+            const updateBlog = {
+                $set: {
+                    title: title, image_url: image_url, short_description: short_description, long_description: long_description, category: category
+                },
+            };
+            const result = await blogs.updateOne(filter, updateBlog);
             res.send(result)
         })
         app.post("/add-blog", async (req, res) => {
