@@ -3,6 +3,7 @@ const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -31,20 +32,21 @@ const client = new MongoClient(uri, {
     }
 });
 
-// auth api
-app.post('/jwt', async (req, res) => {
-    const user = req.body;
-    const token = jwt.sign(user, process.env.JWT_TOKEN_SECRET, {
-        expiresIn: '1h'
+// middlewares
+const verifyToken = (req, res, next) => {
+    const token = req?.cookies?.token;
+
+    if (!token) {
+        return res.status(401).send({ message: 'unauthorized access' })
+    }
+    jwt.verify(token, process.env.JWT_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: 'unauthorized access' })
+        }
+        req.user = decoded;
+        next();
     })
-    res
-        .cookie('token', token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none'
-        })
-        .send({ success: true })
-})
+}
 
 async function run() {
     try {
@@ -56,6 +58,22 @@ async function run() {
         const wishlist = database.collection("wishlist");
         const comments = database.collection("comments");
 
+        // auth related api
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.JWT_TOKEN_SECRET, { expiresIn: '1h' });
+
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none'
+            })
+                .send({ success: true });
+        })
+        app.post('/logout', async (req, res) => {
+            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+        })
+
         app.get("/recent-blogs", async (req, res) => {
             const result = await blogs.find().sort({ _id: -1 }).limit(6).toArray();
             res.send(result)
@@ -64,7 +82,7 @@ async function run() {
             const result = await blogs.find().toArray();
             res.send(result)
         })
-        app.get("/blog/:id", async (req, res) => {
+        app.get("/blog/:id", verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await blogs.findOne(query);
@@ -93,8 +111,11 @@ async function run() {
             const result = await wishlist.insertOne(data);
             res.send(result)
         })
-        app.get("/wishlist", async (req, res) => {
+        app.get("/wishlist", verifyToken, async (req, res) => {
             const email = req.query.email;
+            if (req.user.email !== email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
             const query = { wishlist_email: email };
             const result = await wishlist.find(query).toArray();
             res.send(result)
