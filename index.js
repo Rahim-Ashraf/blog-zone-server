@@ -46,6 +46,7 @@ const verifyToken = (req, res, next) => {
         req.user = decoded;
         next();
     })
+
 }
 
 async function run() {
@@ -62,7 +63,6 @@ async function run() {
         app.post('/jwt', async (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.JWT_TOKEN_SECRET, { expiresIn: '1h' });
-
             res.cookie('token', token, {
                 httpOnly: true,
                 secure: true,
@@ -82,7 +82,7 @@ async function run() {
             const result = await blogs.find().toArray();
             res.send(result)
         })
-        app.get("/blog/:id", verifyToken, async (req, res) => {
+        app.get("/blog/:id", async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await blogs.findOne(query);
@@ -135,6 +135,12 @@ async function run() {
             const id = req.query.id
             const query = { id: id };
             const result = await comments.find(query).toArray();
+            res.send(result)
+        })
+        app.get("/blog-by-title", async (req, res) => {
+            const title = req.query.title;
+            const query = { title: title };
+            const result = await blogs.find(query).toArray();
             res.send(result)
         })
 
