@@ -39,7 +39,7 @@ async function run() {
         const wishlist = database.collection("wishlist");
 
         app.get("/recent-blogs", async (req, res) => {
-            const result = await blogs.find().limit(6).toArray();
+            const result = await blogs.find().sort({ _id: -1 }).limit(6).toArray();
             res.send(result)
         })
         app.get("/all-blogs", async (req, res) => {
@@ -63,7 +63,7 @@ async function run() {
             res.send(result)
         })
         app.get("/wishlist", async (req, res) => {
-            const email= req.query.email;
+            const email = req.query.email;
             const query = { wishlist_email: email };
             const result = await wishlist.find(query).toArray();
             res.send(result)
