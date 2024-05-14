@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -16,6 +17,7 @@ app.use(
     })
 );
 app.use(express.json());
+app.use(cookieParser());
 
 
 const uri = `mongodb+srv://${process.env.DB_user}:${process.env.DB_pass}@cluster0.ae5xaid.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -28,6 +30,21 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
+// auth api
+app.post('/jwt', async (req, res) => {
+    const user = req.body;
+    const token = jwt.sign(user, process.env.JWT_TOKEN_SECRET, {
+        expiresIn: '1h'
+    })
+    res
+        .cookie('token', token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none'
+        })
+        .send({ success: true })
+})
 
 async function run() {
     try {
@@ -80,6 +97,12 @@ async function run() {
             const email = req.query.email;
             const query = { wishlist_email: email };
             const result = await wishlist.find(query).toArray();
+            res.send(result)
+        })
+        app.delete("/remove-wishlist", async (req, res) => {
+            const id = req.query.id
+            const query = { _id: new ObjectId(id) };
+            const result = await wishlist.deleteOne(query);
             res.send(result)
         })
         app.post("/add-comment", async (req, res) => {
