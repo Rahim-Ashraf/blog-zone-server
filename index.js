@@ -37,6 +37,7 @@ async function run() {
         const database = client.db("blog_zone");
         const blogs = database.collection("blogs");
         const wishlist = database.collection("wishlist");
+        const comments = database.collection("comments");
 
         app.get("/recent-blogs", async (req, res) => {
             const result = await blogs.find().sort({ _id: -1 }).limit(6).toArray();
@@ -66,6 +67,17 @@ async function run() {
             const email = req.query.email;
             const query = { wishlist_email: email };
             const result = await wishlist.find(query).toArray();
+            res.send(result)
+        })
+        app.post("/add-comment", async (req, res) => {
+            const comment = req.body;
+            const result = await comments.insertOne(comment);
+            res.send(result)
+        })
+        app.get("/comments", async (req, res) => {
+            const id = req.query.id
+            const query = { id: id };
+            const result = await comments.find(query).toArray();
             res.send(result)
         })
 
