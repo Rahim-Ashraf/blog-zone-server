@@ -139,7 +139,9 @@ async function run() {
         })
         app.get("/blog-by-title", async (req, res) => {
             const title = req.query.title;
-            const query = { title: title };
+            const query = {
+                title: { $regex: title, $options: 'i' }
+            };
             const result = await blogs.find(query).toArray();
             res.send(result)
         })
