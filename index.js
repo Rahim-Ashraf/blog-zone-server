@@ -82,7 +82,7 @@ async function run() {
             const result = await blogs.find().toArray();
             res.send(result)
         })
-        app.get("/blog/:id", verifyToken, async (req, res) => {
+        app.get("/blog/:id", async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await blogs.findOne(query);
