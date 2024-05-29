@@ -145,6 +145,18 @@ async function run() {
             const result = await blogs.find(query).toArray();
             res.send(result)
         })
+        app.get("/my-blogs", async (req, res) => {
+            const email = req.query.email
+            const query = { email: email }
+            const result = await blogs.find(query).toArray()
+            res.send(result)
+        })
+        app.delete("/delete-blog", async (req, res) => {
+            const id = req.query.id
+            const query = { _id: new ObjectId(id) }
+            const result = await blogs.deleteOne(query)
+            res.send(result)
+        })
 
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
